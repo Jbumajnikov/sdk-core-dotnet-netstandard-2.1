@@ -337,7 +337,7 @@ namespace PayPal.Util
         private static Version GetHighestInstalledNetVersion()
         {
             Version highestNetVersion = null;
-
+#if NETFRAMEWORK
             try
             {
                 // Opens the registry key for the .NET Framework entry.
@@ -392,7 +392,7 @@ namespace PayPal.Util
                 }
             }
             catch (System.Exception) { }
-
+#endif
             return highestNetVersion;
         }
     }
