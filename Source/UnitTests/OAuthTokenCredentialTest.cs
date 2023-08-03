@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using PayPal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if NETCOREAPP
+using System.Runtime.Serialization;
+using System.Reflection;
+#endif
 
 namespace PayPal.Testing
 {  
@@ -122,9 +126,56 @@ namespace PayPal.Testing
         /// <returns>A base-64 encoded string containing the client credentials.</returns>
         private string ConvertClientCredentialsToBase64String(string clientId, string clientSecret)
         {
+#if NETCOREAPP
+            OAuthTokenCredential oauthTokenCredential = (OAuthTokenCredential)FormatterServices.GetUninitializedObject(typeof(OAuthTokenCredential));
+            return oauthTokenCredential.Invoke<string>("ConvertClientCredentialsToBase64String", clientId, clientSecret);
+#else
             PrivateType oauthTokenCredential = new PrivateType(typeof(OAuthTokenCredential));
             return oauthTokenCredential.InvokeStatic("ConvertClientCredentialsToBase64String", new string[] { clientId, clientSecret }) as string;
+#endif
         }
 #endif
     }
+
+#if NETCOREAPP
+    public static class ObjectExtensions
+      {
+        /// <summary>
+        /// Invokes a private/public method on an object. Useful for unit testing.
+        /// </summary>
+        /// <typeparam name="T">Specifies the method invocation result type.</typeparam>
+        /// <param name="obj">The object containing the method.</param>
+        /// <param name="methodName">Name of the method.</param>
+        /// <param name="parameters">Parameters to pass to the method.</param>
+        /// <returns>The result of the method invocation.</returns>
+        /// <exception cref="ArgumentException">When no such method exists on the object.</exception>
+        /// <exception cref="ArgumentException">When the method invocation resulted in an object of different type, as the type param T.</exception>
+        /// <example>
+        /// class Test
+        /// {
+        ///   private string GetStr(string x, int y) => $"Success! {x} {y}";
+        /// }
+        ///
+        /// var test = new Test();
+        /// var res = test.Invoke&lt;string&gt;("GetStr", "testparam", 123);
+        /// Console.WriteLine(res); // "Success! testparam 123"
+        /// </example>
+        public static T Invoke<T>(this object obj, string methodName, params object[] parameters)
+        {
+          var method = obj.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+          if (method == null)
+          {
+            throw new ArgumentException($"No private method \"{methodName}\" found in class \"{obj.GetType().Name}\"");
+          }
+
+          var res = method.Invoke(obj, parameters);
+          if (res is T)
+          {
+            return (T)res;
+          }
+
+          throw new ArgumentException($"Bad type parameter. Type parameter is of type \"{typeof(T).Name}\", whereas method invocation result is of type \"{res.GetType().Name}\"");
+        }
+      }
+#endif
 }

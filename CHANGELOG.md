@@ -1,5 +1,9 @@
 ### CHANGE LOG
 
+#### v1.8.0 - August 03, 2023
+
+  * Migrate to net standard 2.1 / netcoreapp 3.1
+
 #### v1.7.0 - December 14, 2015
 
   * Connections to PayPal should use TLSv1.2

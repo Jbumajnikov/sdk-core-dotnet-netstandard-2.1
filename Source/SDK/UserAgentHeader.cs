@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Management;
+#endif
 using System.Text;
 using System.Runtime.InteropServices;
 
@@ -144,7 +146,7 @@ namespace PayPal
         {
 #if NET_2_0 || NET_3_5
             return Is64BitOperatingSystem;
-#elif NET_4_0 || NET_4_5 || NET_4_5_1
+#elif NET_4_0 || NET_4_5 || NET_4_5_1 || NETSTANDARD
             return Environment.Is64BitOperatingSystem;
 #endif
         }
@@ -181,6 +183,8 @@ namespace PayPal
                 return "4.5";
 #elif NET_4_5_1
                 return "4.5.1";
+#elif NETSTANDARD
+                return "netstandard";
 #endif
             }
         }
